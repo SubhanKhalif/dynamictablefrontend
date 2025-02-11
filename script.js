@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
+    const BASE_URL = "https://backend-repo-dynamic.vercel.app";
     const spreadsheetContainer = document.getElementById("spreadsheet-container");
     const addRowBtn = document.getElementById("add-row");
     const addColBtn = document.getElementById("add-col");
@@ -18,7 +19,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function loadTable() {
         try {
-            const response = await fetch("http://localhost:5000/api/getTable");
+            const response = await fetch(`${BASE_URL}/api/getTable`);
             const { metadata, data } = await response.json();
             if (metadata) ({ rows, columns } = metadata);
             tableData = data;
@@ -105,7 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function saveTableToDB() {
         try {
-            await fetch("http://localhost:5000/api/saveTable", {
+            await fetch(`${BASE_URL}/api/saveTable`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ rows, columns, data: tableData }),
@@ -201,40 +202,40 @@ document.addEventListener("DOMContentLoaded", async () => {
         XLSX.writeFile(wb, "spreadsheet.xlsx");
     });
 
-    document.addEventListener("paste", (event) => {
-        event.preventDefault();
-        
-        const clipboardData = event.clipboardData.getData("Text").trim().split("\n").map(row => row.split("\t"));
-        let { row, col } = selectedCell;
+document.addEventListener("paste", (event) => {
+    event.preventDefault();
     
-        const changes = []; // Track changes for undo/redo
-    
-        rows = Math.max(rows, row + clipboardData.length);
-        columns = Math.max(columns, col + clipboardData[0].length);
-        renderTable();
-    
-        clipboardData.forEach((rowData, rowIndex) => {
-            rowData.forEach((cellValue, colIndex) => {
-                const targetRow = row + rowIndex;
-                const targetCol = col + colIndex;
-                const cell = document.querySelector(`[data-row="${targetRow}"][data-col="${targetCol}"]`);
-    
-                if (cell) {
-                    const prevValue = cell.innerText;
-                    cell.innerText = cellValue;
-    
-                    // Store changes for undo
-                    changes.push({ row: targetRow, col: targetCol, prevValue, newValue: cellValue });
-    
-                    saveCellData({ target: cell });
-                }
-            });
+    const clipboardData = event.clipboardData.getData("Text").trim().split("\n").map(row => row.split("\t"));
+    let { row, col } = selectedCell;
+
+    const changes = []; // Track changes for undo/redo
+
+    rows = Math.max(rows, row + clipboardData.length);
+    columns = Math.max(columns, col + clipboardData[0].length);
+    renderTable();
+
+    clipboardData.forEach((rowData, rowIndex) => {
+        rowData.forEach((cellValue, colIndex) => {
+            const targetRow = row + rowIndex;
+            const targetCol = col + colIndex;
+            const cell = document.querySelector(`[data-row="${targetRow}"][data-col="${targetCol}"]`);
+
+            if (cell) {
+                const prevValue = cell.innerText;
+                cell.innerText = cellValue;
+
+                // Store changes for undo
+                changes.push({ row: targetRow, col: targetCol, prevValue, newValue: cellValue });
+
+                saveCellData({ target: cell });
+            }
         });
-    
-        if (changes.length > 0) pushToHistory(changes);
-        saveTableToDB();
     });
-    
-    
-    await loadTable();
+
+    if (changes.length > 0) pushToHistory(changes);
+    saveTableToDB();
+});
+
+
+await loadTable();
 });
