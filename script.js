@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    const BASE_URL = "http://backend-repo-dynamic.vercel.app";
+    const BASE_URL = "https://backend-repo-dynamic.vercel.app";
     const spreadsheetContainer = document.getElementById("spreadsheet-container");
     const addRowBtn = document.getElementById("add-row");
     const addColBtn = document.getElementById("add-col");
